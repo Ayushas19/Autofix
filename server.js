@@ -38,12 +38,12 @@ function getTodayEventWindow() {
   const startIST = new Date(year, month, day, 18, 0, 0, 0);
   const startUTC = new Date(startIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 18:30 IST in UTC
-  const endIST = new Date(year, month, day, 18, 30, 0, 0);
+  // 19:00 IST in UTC
+  const endIST = new Date(year, month, day, 19, 0, 0, 0);
   const endUTC = new Date(endIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 18:31 IST in UTC (for data export)
-  const exportIST = new Date(year, month, day, 18, 31, 0, 0);
+  // 19:01 IST in UTC (for data export)
+  const exportIST = new Date(year, month, day, 19, 1, 0, 0);
   const exportUTC = new Date(exportIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
   return {
@@ -53,8 +53,9 @@ function getTodayEventWindow() {
   };
 }
 
-// Per-user timer duration: 15 minutes in ms
-const USER_TIMER_MS = 15 * 60 * 1000;
+// Per-user timer duration: 10 minutes for fix, 10 minutes for explanation
+const USER_TIMER_MS = 10 * 60 * 1000;
+const EXPLAIN_TIMER_MS = 10 * 60 * 1000;
 
 // ============================================================================
 //  IN-MEMORY DATA STORE (no database)
@@ -126,46 +127,30 @@ loadFromDisk();
 //  AUTOMATA PROBLEM — rendered as a Canvas image
 // ============================================================================
 
-// The broken automata problem description
+// The string permutations problem description
 const PROBLEM_LINES = [
   "╔══════════════════════════════════════════════════════════════╗",
   "║            AUTOMATA FIX CHALLENGE — PROBLEM STATEMENT       ║",
   "╠══════════════════════════════════════════════════════════════╣",
   "║                                                              ║",
-  "║  The following DFA is BROKEN. It should accept all binary    ║",
-  "║  strings that contain the substring '101'.                   ║",
+  "║  The Problem: String Permutations                            ║",
+  "║  Objective: You are given a string (passed as an array of    ║",
+  "║  characters). You need to use recursion to generate all      ║",
+  "║  possible permutations of this string and store them in a    ║",
+  "║  result list.                                                ║",
   "║                                                              ║",
-  "║  States: {q0, q1, q2, q3}                                   ║",
-  "║  Alphabet: {0, 1}                                            ║",
-  "║  Start State: q0                                             ║",
-  "║  Accept State: {q3}                                          ║",
-  "║                                                              ║",
-  "║  CURRENT (BROKEN) TRANSITION TABLE:                          ║",
-  "║  ┌────────┬─────────┬─────────┐                              ║",
-  "║  │ State  │  On '0' │  On '1' │                              ║",
-  "║  ├────────┼─────────┼─────────┤                              ║",
-  "║  │  q0    │   q0    │   q1    │                              ║",
-  "║  │  q1    │   q2    │   q1    │  ← BUG: q1 on '1' → q1?     ║",
-  "║  │  q2    │   q0    │   q0    │  ← BUG: q2 on '1' → q0?     ║",
-  "║  │  q3    │   q3    │   q3    │                              ║",
-  "║  └────────┴─────────┴─────────┘                              ║",
-  "║                                                              ║",
-  "║  BUGS IDENTIFIED:                                            ║",
-  "║  1. State q2 on input '1' incorrectly goes to q0.            ║",
-  "║     It should transition to the ACCEPT state q3.             ║",
-  "║  2. State q1 on input '1' loops back to q1. This means       ║",
-  "║     the automaton restarts the pattern on consecutive 1s.     ║",
-  "║     Consider: is this correct for substring matching?         ║",
+  "║  The Issue: The code compiles and runs without crashing.     ║",
+  "║  It even returns the correct number of results (N!).         ║",
+  "║  However, for the input 'abc', the output contains duplicates║",
+  "║  and misses valid permutations (e.g., it might output        ║",
+  "║  ['abc', 'acb', 'bac', 'bca', 'cab', 'cba'] incorrectly as   ║",
+  "║  ['abc', 'acb', 'bac', 'bca', 'bca', 'bac']).                ║",
   "║                                                              ║",
   "║  YOUR TASK:                                                  ║",
-  "║  Provide the CORRECTED transition table in the format:        ║",
-  "║    δ(state, input) = next_state                              ║",
-  "║  List ALL 8 transitions. Explain each fix you made.           ║",
+  "║  Find the logical error preventing the correct permutations  ║",
+  "║  from forming. Correct the given base code in your chosen    ║",
+  "║  language (C++, Python, Java) and submit your fix.           ║",
   "║                                                              ║",
-  "║  EXAMPLE FORMAT:                                             ║",
-  "║    δ(q0, 0) = q0                                             ║",
-  "║    δ(q0, 1) = q1                                             ║",
-  "║    ... (continue for all states)                              ║",
   "║                                                              ║",
   "╚══════════════════════════════════════════════════════════════╝",
 ];
@@ -292,7 +277,7 @@ function getMsUntilEnd() {
 }
 
 /**
- * Get the remaining ms on a user's personal 15-minute timer.
+ * Get the remaining ms on a user's personal 10-minute timer.
  * Returns 0 if expired.
  */
 function getUserTimeRemaining(username) {
@@ -303,7 +288,18 @@ function getUserTimeRemaining(username) {
 }
 
 /**
- * Check if a user's 15-minute window has expired.
+ * Get the remaining ms on a user's 10-minute explanation timer.
+ * Returns 0 if expired.
+ */
+function getExplainTimeRemaining(username) {
+  const p = participants[username];
+  if (!p || !p.fixLockedAt) return 0;
+  const elapsed = Date.now() - p.fixLockedAt;
+  return Math.max(0, EXPLAIN_TIMER_MS - elapsed);
+}
+
+/**
+ * Check if a user's 10-minute fix window has expired.
  */
 function isUserTimerExpired(username) {
   return getUserTimeRemaining(username) <= 0;
@@ -326,14 +322,17 @@ io.on("connection", (socket) => {
   });
 
   // ── 2. User Login / Reconnection ──
-  socket.on("user:login", (username, callback) => {
-    if (!username || typeof username !== "string") {
-      return callback({ ok: false, error: "Invalid username." });
+  socket.on("user:login", (payload, callback) => {
+    if (!payload || typeof payload !== "object" || !payload.github) {
+      return callback({ ok: false, error: "Invalid payload." });
     }
 
-    username = username.trim();
+    const username = payload.github.trim();
+    const name = (payload.name || "").trim();
+    const language = payload.language || "C++";
+
     if (username.length < 2 || username.length > 40) {
-      return callback({ ok: false, error: "Username must be 2-40 characters." });
+      return callback({ ok: false, error: "GitHub Username must be 2-40 characters." });
     }
 
     const phase = getEventPhase();
@@ -371,8 +370,10 @@ io.on("connection", (socket) => {
           finalSubmitted: p.finalSubmitted,
           tabSwitchCount: p.tabSwitchCount,
           timeRemainingMs: fixLocked ? 0 : userTimeRemaining,
+          explainTimeRemainingMs: fixLocked ? getExplainTimeRemaining(username) : EXPLAIN_TIMER_MS,
           globalTimeRemainingMs: getMsUntilEnd(),
           problemImage: PROBLEM_IMAGE_BASE64,
+          language: p.language,
         },
       });
     }
@@ -380,6 +381,8 @@ io.on("connection", (socket) => {
     // New participant
     participants[username] = {
       username,
+      name,
+      language,
       startTime: Date.now(),
       fixCode: "",
       fixLocked: false,
@@ -395,7 +398,7 @@ io.on("connection", (socket) => {
 
     console.log(`[NEW USER] ${username} started at ${new Date().toISOString()}`);
 
-    // Schedule auto-lock for this user after 15 minutes
+    // Schedule auto-lock for this user after 10 minutes
     const lockDelay = Math.min(USER_TIMER_MS, getMsUntilEnd());
     setTimeout(() => {
       const p = participants[username];
@@ -410,6 +413,20 @@ io.on("connection", (socket) => {
             fixCode: p.fixCode,
           });
         }
+        
+        // Schedule auto-submit for explanation phase after another 10 mins
+        const explainLockDelay = Math.min(EXPLAIN_TIMER_MS, getMsUntilEnd());
+        setTimeout(() => {
+          if (p && !p.finalSubmitted) {
+            p.finalSubmitted = true;
+            p.finalSubmittedAt = Date.now();
+            persistToDisk();
+            console.log(`[AUTO-SUBMIT] ${username}'s explanation phase auto-submitted.`);
+            if (p.socketId) {
+              io.to(p.socketId).emit("explain:locked");
+            }
+          }
+        }, explainLockDelay);
       }
     }, lockDelay);
 
@@ -418,8 +435,10 @@ io.on("connection", (socket) => {
       reconnected: false,
       data: {
         timeRemainingMs: USER_TIMER_MS,
+        explainTimeRemainingMs: EXPLAIN_TIMER_MS,
         globalTimeRemainingMs: getMsUntilEnd(),
         problemImage: PROBLEM_IMAGE_BASE64,
+        language: language,
       },
     });
   });
@@ -428,6 +447,7 @@ io.on("connection", (socket) => {
   socket.on("fix:update", ({ username, fixCode }) => {
     const p = participants[username];
     if (!p) return;
+    if (p.socketId !== socket.id) return; // Prevent impersonation
     if (p.fixLocked) return; // Can't update after lock
     if (isUserTimerExpired(username)) {
       // Timer expired, lock it
@@ -441,10 +461,11 @@ io.on("connection", (socket) => {
     persistToDisk();
   });
 
-  // ── 4. Early submission of fix (before 15 min) ──
+  // ── 4. Early submission of fix (before 10 min) ──
   socket.on("fix:submit", ({ username, fixCode }, callback) => {
     const p = participants[username];
     if (!p) return callback({ ok: false, error: "User not found." });
+    if (p.socketId !== socket.id) return callback({ ok: false, error: "Unauthorized." });
     if (p.fixLocked) return callback({ ok: false, error: "Already locked." });
 
     p.fixCode = fixCode;
@@ -453,6 +474,20 @@ io.on("connection", (socket) => {
     console.log(`[EARLY SUBMIT] ${username} submitted fix early.`);
     persistToDisk();
 
+    // Schedule auto-submit for explanation phase after another 10 mins
+    const explainLockDelay = Math.min(EXPLAIN_TIMER_MS, getMsUntilEnd());
+    setTimeout(() => {
+      if (p && !p.finalSubmitted) {
+        p.finalSubmitted = true;
+        p.finalSubmittedAt = Date.now();
+        persistToDisk();
+        console.log(`[AUTO-SUBMIT] ${username}'s explanation phase auto-submitted.`);
+        if (p.socketId) {
+          io.to(p.socketId).emit("explain:locked");
+        }
+      }
+    }, explainLockDelay);
+
     callback({ ok: true });
   });
 
@@ -460,6 +495,7 @@ io.on("connection", (socket) => {
   socket.on("explanation:update", ({ username, explanation }) => {
     const p = participants[username];
     if (!p) return;
+    if (p.socketId !== socket.id) return; // Prevent impersonation
     if (p.finalSubmitted) return; // Can't update after final submit
     p.explanation = explanation;
     persistToDisk();
@@ -469,14 +505,15 @@ io.on("connection", (socket) => {
   socket.on("final:submit", ({ username, explanation }, callback) => {
     const p = participants[username];
     if (!p) return callback({ ok: false, error: "User not found." });
+    if (p.socketId !== socket.id) return callback({ ok: false, error: "Unauthorized." });
     if (p.finalSubmitted) return callback({ ok: false, error: "Already submitted." });
 
-    // Validate word count (150–200 words)
+    // Validate word count (50–150 words)
     const wordCount = explanation.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount < 150 || wordCount > 200) {
+    if (wordCount < 50 || wordCount > 150) {
       return callback({
         ok: false,
-        error: `Explanation must be 150-200 words. Current: ${wordCount}.`,
+        error: `Explanation must be 50-150 words. Current: ${wordCount}.`,
       });
     }
 
@@ -493,6 +530,7 @@ io.on("connection", (socket) => {
   socket.on("anticheat:tabswitch", ({ username }) => {
     const p = participants[username];
     if (!p) return;
+    if (p.socketId !== socket.id) return; // Prevent impersonation
     p.tabSwitchCount++;
     persistToDisk();
     console.log(`[ANTI-CHEAT] ${username} switched tabs (count: ${p.tabSwitchCount})`);
@@ -580,6 +618,8 @@ function exportResults() {
     totalParticipants: Object.keys(participants).length,
     participants: Object.values(participants).map((p) => ({
       username: p.username,
+      name: p.name,
+      language: p.language,
       startTime: p.startTime ? new Date(p.startTime).toISOString() : null,
       fixCode: p.fixCode,
       fixLockedAt: p.fixLockedAt ? new Date(p.fixLockedAt).toISOString() : null,
@@ -610,6 +650,6 @@ server.listen(PORT, () => {
   console.log(`  AUTOMATA FIX CHALLENGE SERVER`);
   console.log(`  Running on http://localhost:${PORT}`);
   console.log(`  Event Phase: ${getEventPhase().toUpperCase()}`);
-  console.log(`  Event Window: 18:00 IST — 18:30 IST`);
+  console.log(`  Event Window: 18:00 IST — 19:00 IST`);
   console.log(`${"═".repeat(60)}\n`);
 });

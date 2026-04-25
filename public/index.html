@@ -278,7 +278,7 @@
         <div class="border-t border-cyber-border pt-6">
           <p class="text-gray-500 text-xs leading-relaxed max-w-md mx-auto">
             The challenge opens at <span class="text-cyber-green font-bold">18:00 IST</span> sharp.<br/>
-            Once live, you'll have <span class="text-cyber-amber font-bold">15 minutes</span> to fix a broken automaton.<br/>
+            Once live, you'll have <span class="text-cyber-amber font-bold">10 minutes</span> to fix a broken automaton.<br/>
             All activity is monitored. No second chances.
           </p>
         </div>
@@ -302,22 +302,51 @@
         <!-- Global time remaining -->
         <div class="mb-6">
           <p class="text-gray-600 text-xs mb-1">GLOBAL WINDOW CLOSES IN</p>
-          <span id="loginGlobalTimer" class="font-display text-xl text-cyber-amber glow-amber font-bold">30:00</span>
+          <span id="loginGlobalTimer" class="font-display text-xl text-cyber-amber glow-amber font-bold">60:00</span>
         </div>
 
-        <div class="max-w-sm mx-auto">
-          <label for="usernameInput" class="block text-left text-xs text-gray-500 mb-2 tracking-widest uppercase">
-            Discord Username
-          </label>
-          <input
-            type="text"
-            id="usernameInput"
-            placeholder="user#0000"
-            maxlength="40"
-            autocomplete="off"
-            spellcheck="false"
-            class="w-full bg-[#080c18] border border-cyber-border rounded-lg px-4 py-3 text-cyber-green font-mono text-sm focus:border-cyber-green focus:outline-none focus:ring-1 focus:ring-cyber-green/30 transition-all placeholder-gray-700 mb-4"
-          />
+        <div class="max-w-sm mx-auto space-y-4">
+          <div>
+            <label for="nameInput" class="block text-left text-xs text-gray-500 mb-2 tracking-widest uppercase">
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="nameInput"
+              placeholder="John Doe"
+              maxlength="40"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-full bg-[#080c18] border border-cyber-border rounded-lg px-4 py-3 text-cyber-green font-mono text-sm focus:border-cyber-green focus:outline-none focus:ring-1 focus:ring-cyber-green/30 transition-all placeholder-gray-700"
+            />
+          </div>
+          <div>
+            <label for="githubInput" class="block text-left text-xs text-gray-500 mb-2 tracking-widest uppercase">
+              GitHub Username
+            </label>
+            <input
+              type="text"
+              id="githubInput"
+              placeholder="github_user"
+              maxlength="40"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-full bg-[#080c18] border border-cyber-border rounded-lg px-4 py-3 text-cyber-green font-mono text-sm focus:border-cyber-green focus:outline-none focus:ring-1 focus:ring-cyber-green/30 transition-all placeholder-gray-700"
+            />
+          </div>
+          <div>
+            <label for="languageSelect" class="block text-left text-xs text-gray-500 mb-2 tracking-widest uppercase">
+              Programming Language
+            </label>
+            <select
+              id="languageSelect"
+              class="w-full bg-[#080c18] border border-cyber-border rounded-lg px-4 py-3 text-cyber-green font-mono text-sm focus:border-cyber-green focus:outline-none focus:ring-1 focus:ring-cyber-green/30 transition-all"
+            >
+              <option value="C++">C++</option>
+              <option value="Java">Java</option>
+              <option value="Python">Python</option>
+            </select>
+          </div>
 
           <button
             id="btnStart"
@@ -344,12 +373,12 @@
         <div class="flex items-center gap-4">
           <div class="text-center">
             <p class="text-[10px] text-gray-600 tracking-widest">YOUR TIME</p>
-            <span id="fixTimer" class="font-display text-lg text-cyber-green font-bold glow-green">15:00</span>
+            <span id="fixTimer" class="font-display text-lg text-cyber-green font-bold glow-green">10:00</span>
           </div>
           <div class="w-px h-8 bg-cyber-border"></div>
           <div class="text-center">
             <p class="text-[10px] text-gray-600 tracking-widest">GLOBAL</p>
-            <span id="fixGlobalTimer" class="font-display text-lg text-cyber-amber font-bold">30:00</span>
+            <span id="fixGlobalTimer" class="font-display text-lg text-cyber-amber font-bold">60:00</span>
           </div>
           <div class="w-px h-8 bg-cyber-border"></div>
           <div class="text-center" id="tabSwitchDisplay">
@@ -409,13 +438,13 @@
         </div>
         <div class="flex items-center gap-4">
           <div class="text-center">
-            <p class="text-[10px] text-gray-600 tracking-widest">PHASE</p>
-            <span class="font-display text-sm text-cyber-amber font-bold glow-amber">EXPLAIN</span>
+            <p class="text-[10px] text-gray-600 tracking-widest">YOUR EXPLAIN TIME</p>
+            <span id="explainTimer" class="font-display text-lg text-cyber-purple font-bold glow-purple">10:00</span>
           </div>
           <div class="w-px h-8 bg-cyber-border"></div>
           <div class="text-center">
             <p class="text-[10px] text-gray-600 tracking-widest">GLOBAL</p>
-            <span id="explainGlobalTimer" class="font-display text-lg text-cyber-amber font-bold">--:--</span>
+            <span id="explainGlobalTimer" class="font-display text-lg text-cyber-amber font-bold">60:00</span>
           </div>
         </div>
       </div>
@@ -442,7 +471,7 @@
         </div>
         <p class="text-xs text-gray-500 mb-3">
           Explain your reasoning. Why did you change each transition? 
-          <span class="text-cyber-amber font-bold">Must be 150-200 words.</span> Paste is disabled.
+          <span class="text-cyber-amber font-bold">Must be 50-150 words.</span> Paste is disabled.
         </p>
         <textarea
           id="explanationTextarea"
@@ -457,7 +486,7 @@
       <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs text-gray-500">Word Count</span>
-          <span id="wordCountDisplay" class="text-xs font-bold text-gray-500">0 / 150-200</span>
+          <span id="wordCountDisplay" class="text-xs font-bold text-gray-500">0 / 50-150</span>
         </div>
         <div class="word-bar">
           <div id="wordBarFill" class="word-bar-fill bg-gray-600" style="width: 0%"></div>
@@ -471,7 +500,7 @@
         disabled
         class="btn-cyber w-full bg-gray-800 border border-gray-700 text-gray-500 font-bold py-3 rounded-lg cursor-not-allowed transition-all tracking-widest text-sm uppercase"
       >
-        🔒 FINAL SUBMIT (NEED 150-200 WORDS)
+        🔒 FINAL SUBMIT (NEED 50-150 WORDS)
       </button>
     </section>
 
@@ -521,7 +550,9 @@
     let username = "";
     let userTimeRemainingMs = 0;
     let globalTimeRemainingMs = 0;
+    let explainTimeRemainingMs = 0;
     let userTimerInterval = null;
+    let explainTimerInterval = null;
     let globalTimerInterval = null;
     let lobbyTimerInterval = null;
     let autoSaveInterval = null;
@@ -722,16 +753,21 @@
     // ──────────────────────────────────────────────────────────────
 
     function handleLogin() {
-      const input = $("usernameInput").value.trim();
-      if (!input) {
-        showLoginError("Please enter your Discord username.");
+      const name = $("nameInput").value.trim();
+      const github = $("githubInput").value.trim();
+      const language = $("languageSelect").value;
+      
+      if (!name || !github) {
+        showLoginError("Please enter your name and GitHub username.");
         return;
       }
 
       $("btnStart").disabled = true;
       $("btnStart").textContent = "CONNECTING...";
 
-      socket.emit("user:login", input, (res) => {
+      const payload = { name, github, language };
+
+      socket.emit("user:login", payload, (res) => {
         if (!res.ok) {
           showLoginError(res.error);
           $("btnStart").disabled = false;
@@ -739,7 +775,7 @@
           return;
         }
 
-        username = input;
+        username = github;
 
         if (res.reconnected) {
           // ── Reconnection: restore state ──
@@ -752,6 +788,7 @@
             showDonePhase();
           } else if (d.fixLocked) {
             // Fix is locked, go to explain phase
+            explainTimeRemainingMs = d.explainTimeRemainingMs;
             transitionToExplain(d.fixCode, d.explanation);
           } else {
             // Still in fix phase
@@ -761,8 +798,19 @@
         } else {
           // ── New user: start fresh ──
           userTimeRemainingMs = res.data.timeRemainingMs;
+          explainTimeRemainingMs = res.data.explainTimeRemainingMs;
           globalTimeRemainingMs = res.data.globalTimeRemainingMs;
-          showFixPhase(res.data.problemImage);
+          
+          let defaultCode = "";
+          if (res.data.language === "C++") {
+            defaultCode = `void generatePermutations(string& str, int left, int right, vector<string>& result) {\n    if (left == right) {\n        result.push_back(str);\n    } else {\n        for (int i = left; i <= right; i++) {\n            swap(str[left], str[i]);\n            generatePermutations(str, left + 1, right, result);\n        }\n    }\n}\n// Called initially as: generatePermutations(str, 0, str.length() - 1, result);`;
+          } else if (res.data.language === "Python") {
+            defaultCode = `def generate_permutations(chars, left, right, result):\n    if left == right:\n        result.append("".join(chars))\n    else:\n        for i in range(left, right + 1):\n            chars[left], chars[i] = chars[i], chars[left]\n            generate_permutations(chars, left + 1, right, result)\n            \n# Called initially as: generate_permutations(list("abc"), 0, len(chars) - 1, result)`;
+          } else if (res.data.language === "Java") {
+            defaultCode = `public void generatePermutations(char[] str, int left, int right, List<String> result) {\n    if (left == right) {\n        result.add(new String(str));\n    } else {\n        for (int i = left; i <= right; i++) {\n            // Assume swap() is a simple helper function that swaps two indices\n            swap(str, left, i); \n            generatePermutations(str, left + 1, right, result);\n        }\n    }\n}\n// Called initially as: generatePermutations(str, 0, str.length - 1, result);`;
+          }
+          
+          showFixPhase(res.data.problemImage, defaultCode);
         }
       });
     }
@@ -812,11 +860,34 @@
       $("explainUsername").textContent = username;
       $("lockedFixDisplay").value = fixCode || "";
       $("explainGlobalTimer").textContent = formatTime(globalTimeRemainingMs);
+      $("explainTimer").textContent = formatTime(explainTimeRemainingMs);
 
       if (existingExplanation) {
         $("explanationTextarea").value = existingExplanation;
         updateWordCount();
       }
+      
+      // Start explain timer
+      clearInterval(explainTimerInterval);
+      explainTimerInterval = setInterval(() => {
+        explainTimeRemainingMs -= 1000;
+        if (explainTimeRemainingMs <= 0) {
+          explainTimeRemainingMs = 0;
+          clearInterval(explainTimerInterval);
+        }
+
+        const timerEl = $("explainTimer");
+        timerEl.textContent = formatTime(explainTimeRemainingMs);
+
+        // Color changes based on urgency
+        if (explainTimeRemainingMs <= 60000) {
+          timerEl.classList.remove("text-cyber-purple", "text-cyber-amber", "glow-purple", "glow-amber");
+          timerEl.classList.add("text-cyber-red", "glow-red", "pulse-glow");
+        } else if (explainTimeRemainingMs <= 180000) {
+          timerEl.classList.remove("text-cyber-purple", "glow-purple");
+          timerEl.classList.add("text-cyber-amber", "glow-amber");
+        }
+      }, 1000);
     }
 
     function handleFinalSubmit() {
@@ -939,10 +1010,19 @@
         }
       });
 
-      // ── Fix auto-locked by server (15 min expired) ──
+      // ── Fix auto-locked by server (10 min expired) ──
       socket.on("fix:locked", (data) => {
         if (currentPhase === "fix") {
+          explainTimeRemainingMs = 10 * 60 * 1000; // 10 minutes
           transitionToExplain(data.fixCode || $("fixTextarea").value);
+        }
+      });
+
+      // ── Explain auto-locked by server (10 min expired) ──
+      socket.on("explain:locked", () => {
+        if (currentPhase === "explain") {
+          // Trigger final submit with whatever they have
+          handleFinalSubmit();
         }
       });
 
@@ -970,6 +1050,7 @@
       // ── Global event ended — force lock everything ──
       socket.on("event:ended", (data) => {
         clearInterval(userTimerInterval);
+        clearInterval(explainTimerInterval);
         clearInterval(globalTimerInterval);
         clearInterval(autoSaveInterval);
         clearInterval(lobbyTimerInterval);
@@ -998,8 +1079,8 @@
       // Word count listener for explanation
       $("explanationTextarea").addEventListener("input", updateWordCount);
 
-      // Enter key on username input
-      $("usernameInput").addEventListener("keydown", (e) => {
+      // Enter key on github input
+      $("githubInput").addEventListener("keydown", (e) => {
         if (e.key === "Enter") handleLogin();
       });
     });
