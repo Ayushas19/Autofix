@@ -47,16 +47,16 @@ function getTodayEventWindow() {
   const month = nowIST.getMonth();
   const day = nowIST.getDate();
 
-  // 15:35 IST in UTC
-  const startIST = new Date(year, month, day, 15, 35, 0, 0);
+  // 15:50 IST in UTC
+  const startIST = new Date(year, month, day, 15, 50, 0, 0);
   const startUTC = new Date(startIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 15:39 IST in UTC
-  const endIST = new Date(year, month, day, 15, 39, 0, 0);
+  // 15:54 IST in UTC
+  const endIST = new Date(year, month, day, 15, 54, 0, 0);
   const endUTC = new Date(endIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 15:40 IST in UTC (for data export)
-  const exportIST = new Date(year, month, day, 15, 40, 0, 0);
+  // 15:55 IST in UTC (for data export)
+  const exportIST = new Date(year, month, day, 15, 55, 0, 0);
   const exportUTC = new Date(exportIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
   return {
@@ -173,51 +173,61 @@ const PROBLEM_LINES = [
  * using the `canvas` package. This prevents simple copy-paste cheating.
  */
 function renderProblemImage() {
-  const lineHeight = 22;
-  const padding = 30;
-  const fontSize = 15;
+  try {
+    const lineHeight = 22;
+    const padding = 30;
+    const fontSize = 15;
 
-  // Measure canvas size
-  const canvasWidth = 720;
-  const canvasHeight = PROBLEM_LINES.length * lineHeight + padding * 2;
+    // Measure canvas size
+    const canvasWidth = 720;
+    const canvasHeight = PROBLEM_LINES.length * lineHeight + padding * 2;
 
-  const canvas = createCanvas(canvasWidth, canvasHeight);
-  const ctx = canvas.getContext("2d");
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext("2d");
 
-  // Dark background
-  ctx.fillStyle = "#0a0e1a";
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // Dark background
+    ctx.fillStyle = "#0a0e1a";
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  // Subtle border
-  ctx.strokeStyle = "#00ff8855";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(4, 4, canvasWidth - 8, canvasHeight - 8);
+    // Subtle border
+    ctx.strokeStyle = "#00ff8855";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(4, 4, canvasWidth - 8, canvasHeight - 8);
 
-  // Monospace font for the problem text
-  ctx.font = `${fontSize}px monospace`;
-  ctx.fillStyle = "#00ff88";
-  ctx.textBaseline = "top";
+    // Monospace font for the problem text
+    ctx.font = `${fontSize}px monospace`;
+    ctx.fillStyle = "#00ff88";
+    ctx.textBaseline = "top";
 
-  // Draw each line
-  PROBLEM_LINES.forEach((line, i) => {
-    // Highlight bug lines in a warning color
-    if (line.includes("BUG")) {
-      ctx.fillStyle = "#ff4444";
-    } else if (line.includes("YOUR TASK") || line.includes("EXAMPLE FORMAT")) {
-      ctx.fillStyle = "#ffcc00";
-    } else {
-      ctx.fillStyle = "#00ff88";
-    }
-    ctx.fillText(line, padding, padding + i * lineHeight);
-  });
+    // Draw each line
+    PROBLEM_LINES.forEach((line, i) => {
+      // Highlight bug lines in a warning color
+      if (line.includes("BUG")) {
+        ctx.fillStyle = "#ff4444";
+      } else if (line.includes("YOUR TASK") || line.includes("EXAMPLE FORMAT")) {
+        ctx.fillStyle = "#ffcc00";
+      } else {
+        ctx.fillStyle = "#00ff88";
+      }
+      ctx.fillText(line, padding, padding + i * lineHeight);
+    });
 
-  // Return as base64 data URI
-  return canvas.toDataURL("image/png");
+    // Return as base64 data URI
+    return canvas.toDataURL("image/png");
+  } catch (err) {
+    console.error("[CANVAS] ❌ Failed to generate base64:", err.message);
+    return ""; // Fallback to empty string
+  }
 }
 
 // Pre-render the problem image once at startup
-const PROBLEM_IMAGE_BASE64 = renderProblemImage();
-console.log("[SERVER] Problem image rendered (canvas) — base64 ready.");
+let PROBLEM_IMAGE_BASE64 = "";
+try {
+  PROBLEM_IMAGE_BASE64 = renderProblemImage();
+  console.log("[SERVER] Problem image rendered (canvas) — base64 ready. Length:", PROBLEM_IMAGE_BASE64.length);
+} catch (err) {
+  console.error("[SERVER] ❌ CRITICAL: Canvas initialization failed:", err.message);
+}
 
 // ============================================================================
 //  HTTP SERVER — serves static files from /public
@@ -345,10 +355,12 @@ io.on("connection", (socket) => {
     const language = payload.language || "C++";
 
     if (username.length < 2 || username.length > 40) {
+      console.warn(`[LOGIN] ❌ Invalid username length: ${username}`);
       return callback({ ok: false, error: "GitHub Username must be 2-40 characters." });
     }
 
     const phase = getEventPhase();
+    console.log(`[LOGIN] Attempt by ${username} (Phase: ${phase})`);
     if (phase === "lobby") {
       return callback({ ok: false, error: "Event hasn't started yet. Please wait." });
     }
@@ -477,9 +489,18 @@ io.on("connection", (socket) => {
   // ── 4. Early submission of fix (before 10 min) ──
   socket.on("fix:submit", ({ username, fixCode }, callback) => {
     const p = participants[username];
-    if (!p) return callback({ ok: false, error: "User not found." });
-    if (p.socketId !== socket.id) return callback({ ok: false, error: "Unauthorized." });
-    if (p.fixLocked) return callback({ ok: false, error: "Already locked." });
+    if (!p) {
+      console.warn(`[SUBMIT] ❌ User not found: ${username}`);
+      return callback({ ok: false, error: "User not found." });
+    }
+    if (p.socketId !== socket.id) {
+      console.warn(`[SUBMIT] ❌ Unauthorized socket for ${username}`);
+      return callback({ ok: false, error: "Unauthorized." });
+    }
+    if (p.fixLocked) {
+      console.warn(`[SUBMIT] ❌ Already locked for ${username}`);
+      return callback({ ok: false, error: "Already locked." });
+    }
 
     p.fixCode = fixCode;
     p.fixLocked = true;
@@ -580,7 +601,7 @@ setInterval(() => {
 
   // Transition: lobby → active
   if (lastPhase === "lobby" && currentPhase === "active") {
-    console.log("[EVENT] 🚀 Event window OPEN — 15:35 IST");
+    console.log("[EVENT] 🚀 Event window OPEN — 15:50 IST");
     io.emit("event:phase", {
       phase: "active",
       msUntilStart: 0,
@@ -591,7 +612,7 @@ setInterval(() => {
 
   // Transition: active → ended
   if (lastPhase === "active" && currentPhase === "ended") {
-    console.log("[EVENT] 🛑 Event window CLOSED — 15:39 IST");
+    console.log("[EVENT] 🛑 Event window CLOSED — 15:54 IST");
 
     // Force-lock all participants
     for (const key of Object.keys(participants)) {
@@ -611,7 +632,7 @@ setInterval(() => {
       message: "⏰ TIME'S UP! The event has ended. All submissions are locked.",
     });
 
-    // Schedule data export at 15:40 IST (1 minute after end)
+    // Schedule data export at 15:55 IST (1 minute after end)
     setTimeout(() => {
       exportResults();
     }, 60 * 1000);
@@ -667,7 +688,7 @@ server.listen(PORT, () => {
     console.log(`  ⚠️ TEST MODE ACTIVE ⚠️`);
     console.log(`  Starts in 2 minutes. Total window: 4 minutes.`);
   } else {
-    console.log(`  Event Window: 15:35 IST — 15:39 IST`);
+    console.log(`  Event Window: 15:50 IST — 15:54 IST`);
   }
   console.log(`${"═".repeat(60)}\n`);
 });
