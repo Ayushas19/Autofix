@@ -16,6 +16,11 @@ const { createCanvas } = require("canvas");
 
 const PORT = 3000;
 
+const TEST_MODE = false;
+const BOOT_TIME = Date.now();
+const TEST_START_MS = BOOT_TIME + 2 * 60 * 1000;      // Starts in 2 mins
+const TEST_END_MS   = TEST_START_MS + 4 * 60 * 1000;  // 4 min total duration
+
 // Event window: 18:00 IST to 18:30 IST
 // IST is UTC+5:30 → offset in ms = 5.5 * 60 * 60 * 1000
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -29,21 +34,29 @@ function getNowIST() {
 
 // Build today's event start/end in real UTC timestamps for comparison
 function getTodayEventWindow() {
+  if (TEST_MODE) {
+    return {
+      startMs: TEST_START_MS,
+      endMs: TEST_END_MS,
+      exportMs: TEST_END_MS + 60000,
+    };
+  }
+
   const nowIST = getNowIST();
   const year = nowIST.getFullYear();
   const month = nowIST.getMonth();
   const day = nowIST.getDate();
 
-  // 18:00 IST in UTC
-  const startIST = new Date(year, month, day, 18, 0, 0, 0);
+  // 15:15 IST in UTC
+  const startIST = new Date(year, month, day, 15, 15, 0, 0);
   const startUTC = new Date(startIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 19:00 IST in UTC
-  const endIST = new Date(year, month, day, 19, 0, 0, 0);
+  // 15:19 IST in UTC
+  const endIST = new Date(year, month, day, 15, 19, 0, 0);
   const endUTC = new Date(endIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 19:01 IST in UTC (for data export)
-  const exportIST = new Date(year, month, day, 19, 1, 0, 0);
+  // 15:20 IST in UTC (for data export)
+  const exportIST = new Date(year, month, day, 15, 20, 0, 0);
   const exportUTC = new Date(exportIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
   return {
@@ -53,9 +66,9 @@ function getTodayEventWindow() {
   };
 }
 
-// Per-user timer duration: 10 minutes for fix, 10 minutes for explanation
-const USER_TIMER_MS = 10 * 60 * 1000;
-const EXPLAIN_TIMER_MS = 10 * 60 * 1000;
+// Per-user timer duration: 1.5 minutes
+const USER_TIMER_MS = 1.5 * 60 * 1000;
+const EXPLAIN_TIMER_MS = 1.5 * 60 * 1000;
 
 // ============================================================================
 //  IN-MEMORY DATA STORE (no database)
@@ -567,7 +580,7 @@ setInterval(() => {
 
   // Transition: lobby → active
   if (lastPhase === "lobby" && currentPhase === "active") {
-    console.log("[EVENT] 🚀 Event window OPEN — 18:00 IST");
+    console.log("[EVENT] 🚀 Event window OPEN — 15:15 IST");
     io.emit("event:phase", {
       phase: "active",
       msUntilStart: 0,
@@ -578,7 +591,7 @@ setInterval(() => {
 
   // Transition: active → ended
   if (lastPhase === "active" && currentPhase === "ended") {
-    console.log("[EVENT] 🛑 Event window CLOSED — 18:30 IST");
+    console.log("[EVENT] 🛑 Event window CLOSED — 15:19 IST");
 
     // Force-lock all participants
     for (const key of Object.keys(participants)) {
@@ -598,7 +611,7 @@ setInterval(() => {
       message: "⏰ TIME'S UP! The event has ended. All submissions are locked.",
     });
 
-    // Schedule data export at 18:31 IST (1 minute after end)
+    // Schedule data export at 15:20 IST (1 minute after end)
     setTimeout(() => {
       exportResults();
     }, 60 * 1000);
@@ -650,6 +663,11 @@ server.listen(PORT, () => {
   console.log(`  AUTOMATA FIX CHALLENGE SERVER`);
   console.log(`  Running on http://localhost:${PORT}`);
   console.log(`  Event Phase: ${getEventPhase().toUpperCase()}`);
-  console.log(`  Event Window: 18:00 IST — 19:00 IST`);
+  if (TEST_MODE) {
+    console.log(`  ⚠️ TEST MODE ACTIVE ⚠️`);
+    console.log(`  Starts in 2 minutes. Total window: 4 minutes.`);
+  } else {
+    console.log(`  Event Window: 15:15 IST — 15:19 IST`);
+  }
   console.log(`${"═".repeat(60)}\n`);
 });
