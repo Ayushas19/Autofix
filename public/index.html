@@ -453,7 +453,8 @@
           <span class="text-[10px] text-gray-600 ml-auto">RENDERED SERVER-SIDE &middot; NO COPY</span>
         </div>
         <div class="bg-cyber-panel border border-cyber-border rounded-lg p-4 overflow-x-auto">
-          <img id="problemImage" class="problem-img mx-auto max-w-full" alt="Automata Problem" draggable="false" onerror="console.error('Image failed to load'); this.alt='Failed to load problem image. Please refresh.';" />
+          <img id="problemImage" class="problem-img mx-auto max-w-full hidden" alt="Automata Problem" draggable="false" onerror="console.error('Image failed to load'); this.classList.add('hidden'); $('problemTextFallback').classList.remove('hidden');" />
+          <pre id="problemTextFallback" class="hidden text-cyber-green font-mono text-sm leading-relaxed whitespace-pre"></pre>
         </div>
       </div>
 
@@ -833,7 +834,7 @@
           } else {
             // Still in fix phase
             userTimeRemainingMs = d.timeRemainingMs;
-            showFixPhase(d.problemImage, d.fixCode);
+            showFixPhase(d.problemImage, d.fixCode, d.problemText);
           }
         } else {
           // ── New user: start fresh ──
@@ -850,7 +851,7 @@
             defaultCode = `public void generatePermutations(char[] str, int left, int right, List<String> result) {\n    if (left == right) {\n        result.add(new String(str));\n    } else {\n        for (int i = left; i <= right; i++) {\n            // Assume swap() is a simple helper function that swaps two indices\n            swap(str, left, i); \n            generatePermutations(str, left + 1, right, result);\n        }\n    }\n}\n// Called initially as: generatePermutations(str, 0, str.length - 1, result);`;
           }
 
-          showFixPhase(res.data.problemImage, defaultCode);
+          showFixPhase(res.data.problemImage, defaultCode, res.data.problemText);
         }
       });
     }
@@ -862,10 +863,23 @@
       setTimeout(() => el.classList.add("hidden"), 5000);
     }
 
-    function showFixPhase(problemImage, existingCode) {
+    function showFixPhase(problemImage, existingCode, problemText) {
       showPhase("fix");
       $("fixUsername").textContent = username;
-      $("problemImage").src = problemImage;
+      
+      const imgEl = $("problemImage");
+      const textEl = $("problemTextFallback");
+      
+      if (problemImage && problemImage.length > 100) {
+        imgEl.src = problemImage;
+        imgEl.classList.remove("hidden");
+        textEl.classList.add("hidden");
+      } else {
+        imgEl.classList.add("hidden");
+        textEl.textContent = problemText || "Problem statement not available.";
+        textEl.classList.remove("hidden");
+      }
+      
       $("fixTimer").textContent = formatTime(userTimeRemainingMs);
       $("fixGlobalTimer").textContent = formatTime(globalTimeRemainingMs);
       $("tabSwitchCount").textContent = tabSwitches;

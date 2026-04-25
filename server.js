@@ -106,11 +106,14 @@ function persistToDisk() {
     const snapshot = {};
     for (const key of Object.keys(participants)) {
       const p = participants[key];
-      snapshot[key] = { ...p, socketId: null }; // don't persist socket IDs
+      snapshot[key] = { ...p, socketId: null };
     }
-    fs.writeFileSync(BACKUP_PATH, JSON.stringify(snapshot, null, 2), "utf-8");
+    // Use asynchronous write to avoid blocking the event loop
+    fs.writeFile(BACKUP_PATH, JSON.stringify(snapshot, null, 2), "utf-8", (err) => {
+      if (err) console.error("[PERSIST] ❌ Async write failed:", err.message);
+    });
   } catch (err) {
-    console.error("[PERSIST] ❌ Failed to write backup:", err.message);
+    console.error("[PERSIST] ❌ Failed to prepare backup snapshot:", err.message);
   }
 }
 
@@ -222,11 +225,17 @@ function renderProblemImage() {
 
 // Pre-render the problem image once at startup
 let PROBLEM_IMAGE_BASE64 = "";
+const PROBLEM_TEXT = PROBLEM_LINES.join("\n");
+
 try {
   PROBLEM_IMAGE_BASE64 = renderProblemImage();
-  console.log("[SERVER] Problem image rendered (canvas) — base64 ready. Length:", PROBLEM_IMAGE_BASE64.length);
+  if (PROBLEM_IMAGE_BASE64) {
+    console.log("[SERVER] Problem image rendered (canvas) — base64 ready. Length:", PROBLEM_IMAGE_BASE64.length);
+  } else {
+    console.warn("[SERVER] ⚠️ Canvas rendered empty string. Using text fallback.");
+  }
 } catch (err) {
-  console.error("[SERVER] ❌ CRITICAL: Canvas initialization failed:", err.message);
+  console.error("[SERVER] ❌ CRITICAL: Canvas initialization failed. Using text fallback.", err.message);
 }
 
 // ============================================================================
@@ -333,7 +342,7 @@ function isUserTimerExpired(username) {
 // ────────────────────────────────────────────────────────────────
 
 io.on("connection", (socket) => {
-  console.log(`[SOCKET] Connected: ${socket.id}`);
+  console.log(`[SOCKET] 🟢 Connected: ${socket.id} (Total: ${io.engine.clientsCount})`);
 
   // ── 1. Send current event phase to the connecting client ──
   const phase = getEventPhase();
@@ -398,6 +407,7 @@ io.on("connection", (socket) => {
           explainTimeRemainingMs: fixLocked ? getExplainTimeRemaining(username) : EXPLAIN_TIMER_MS,
           globalTimeRemainingMs: getMsUntilEnd(),
           problemImage: PROBLEM_IMAGE_BASE64,
+          problemText: PROBLEM_IMAGE_BASE64 ? null : PROBLEM_TEXT,
           language: p.language,
         },
       });
@@ -463,6 +473,7 @@ io.on("connection", (socket) => {
         explainTimeRemainingMs: EXPLAIN_TIMER_MS,
         globalTimeRemainingMs: getMsUntilEnd(),
         problemImage: PROBLEM_IMAGE_BASE64,
+        problemText: PROBLEM_IMAGE_BASE64 ? null : PROBLEM_TEXT,
         language: language,
       },
     });
@@ -575,8 +586,8 @@ io.on("connection", (socket) => {
   });
 
   // ── 8. Disconnect handling ──
-  socket.on("disconnect", () => {
-    console.log(`[SOCKET] Disconnected: ${socket.id}`);
+  socket.on("disconnect", (reason) => {
+    console.log(`[SOCKET] 🔴 Disconnected: ${socket.id} (Reason: ${reason})`);
     // Find the participant by socketId and nullify it
     for (const key of Object.keys(participants)) {
       if (participants[key].socketId === socket.id) {
