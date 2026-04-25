@@ -47,16 +47,16 @@ function getTodayEventWindow() {
   const month = nowIST.getMonth();
   const day = nowIST.getDate();
 
-  // 16:15 IST in UTC
-  const startIST = new Date(year, month, day, 16, 15, 0, 0);
+  // 16:30 IST in UTC
+  const startIST = new Date(year, month, day, 16, 30, 0, 0);
   const startUTC = new Date(startIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 16:19 IST in UTC
-  const endIST = new Date(year, month, day, 16, 19, 0, 0);
+  // 16:34 IST in UTC
+  const endIST = new Date(year, month, day, 16, 34, 0, 0);
   const endUTC = new Date(endIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 16:20 IST in UTC
-  const exportIST = new Date(year, month, day, 16, 20, 0, 0);
+  // 16:35 IST in UTC
+  const exportIST = new Date(year, month, day, 16, 35, 0, 0);
   const exportUTC = new Date(exportIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
   return {
@@ -612,7 +612,7 @@ setInterval(() => {
 
   // Transition: lobby → active
   if (lastPhase === "lobby" && currentPhase === "active") {
-    console.log("[EVENT] 🚀 Event window OPEN — 16:15 IST");
+    console.log("[EVENT] 🚀 Event window OPEN — 16:30 IST");
     io.emit("event:phase", {
       phase: "active",
       msUntilStart: 0,
@@ -623,7 +623,7 @@ setInterval(() => {
 
   // Transition: active → ended
   if (lastPhase === "active" && currentPhase === "ended") {
-    console.log("[EVENT] 🛑 Event window CLOSED — 16:19 IST");
+    console.log("[EVENT] 🛑 Event window CLOSED — 16:34 IST");
 
     // Force-lock all participants
     for (const key of Object.keys(participants)) {
@@ -643,7 +643,7 @@ setInterval(() => {
       message: "⏰ TIME'S UP! The event has ended. All submissions are locked.",
     });
 
-    // Schedule data export at 16:20 IST (1 minute after end)
+    // Schedule data export at 16:35 IST (1 minute after end)
     setTimeout(() => {
       exportResults();
     }, 60 * 1000);
@@ -699,7 +699,7 @@ server.listen(PORT, () => {
     console.log(`  ⚠️ TEST MODE ACTIVE ⚠️`);
     console.log(`  Starts in 2 minutes. Total window: 4 minutes.`);
   } else {
-    console.log(`  Event Window: 16:15 IST — 16:19 IST`);
+    console.log(`  Event Window: 16:30 IST — 16:34 IST`);
   }
   console.log(`${"═".repeat(60)}\n`);
 });
