@@ -19,7 +19,7 @@ const PORT = 3000;
 const TEST_MODE = false;
 const BOOT_TIME = Date.now();
 const TEST_START_MS = BOOT_TIME + 2 * 60 * 1000;      // Starts in 2 mins
-const TEST_END_MS   = TEST_START_MS + 4 * 60 * 1000;  // 4 min total duration
+const TEST_END_MS = TEST_START_MS + 4 * 60 * 1000;  // 4 min total duration
 
 // Event window: 18:00 IST to 18:30 IST
 // IST is UTC+5:30 → offset in ms = 5.5 * 60 * 60 * 1000
@@ -426,7 +426,7 @@ io.on("connection", (socket) => {
             fixCode: p.fixCode,
           });
         }
-        
+
         // Schedule auto-submit for explanation phase after another 10 mins
         const explainLockDelay = Math.min(EXPLAIN_TIMER_MS, getMsUntilEnd());
         setTimeout(() => {
