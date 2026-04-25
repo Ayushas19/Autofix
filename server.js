@@ -47,16 +47,16 @@ function getTodayEventWindow() {
   const month = nowIST.getMonth();
   const day = nowIST.getDate();
 
-  // 15:30 IST in UTC
-  const startIST = new Date(year, month, day, 15, 30, 0, 0);
+  // 15:35 IST in UTC
+  const startIST = new Date(year, month, day, 15, 35, 0, 0);
   const startUTC = new Date(startIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 15:34 IST in UTC
-  const endIST = new Date(year, month, day, 15, 34, 0, 0);
+  // 15:39 IST in UTC
+  const endIST = new Date(year, month, day, 15, 39, 0, 0);
   const endUTC = new Date(endIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
-  // 15:35 IST in UTC (for data export)
-  const exportIST = new Date(year, month, day, 15, 35, 0, 0);
+  // 15:40 IST in UTC (for data export)
+  const exportIST = new Date(year, month, day, 15, 40, 0, 0);
   const exportUTC = new Date(exportIST.getTime() - IST_OFFSET_MS - new Date().getTimezoneOffset() * 60000);
 
   return {
@@ -580,7 +580,7 @@ setInterval(() => {
 
   // Transition: lobby → active
   if (lastPhase === "lobby" && currentPhase === "active") {
-    console.log("[EVENT] 🚀 Event window OPEN — 15:30 IST");
+    console.log("[EVENT] 🚀 Event window OPEN — 15:35 IST");
     io.emit("event:phase", {
       phase: "active",
       msUntilStart: 0,
@@ -591,7 +591,7 @@ setInterval(() => {
 
   // Transition: active → ended
   if (lastPhase === "active" && currentPhase === "ended") {
-    console.log("[EVENT] 🛑 Event window CLOSED — 15:34 IST");
+    console.log("[EVENT] 🛑 Event window CLOSED — 15:39 IST");
 
     // Force-lock all participants
     for (const key of Object.keys(participants)) {
@@ -611,7 +611,7 @@ setInterval(() => {
       message: "⏰ TIME'S UP! The event has ended. All submissions are locked.",
     });
 
-    // Schedule data export at 15:35 IST (1 minute after end)
+    // Schedule data export at 15:40 IST (1 minute after end)
     setTimeout(() => {
       exportResults();
     }, 60 * 1000);
@@ -667,7 +667,7 @@ server.listen(PORT, () => {
     console.log(`  ⚠️ TEST MODE ACTIVE ⚠️`);
     console.log(`  Starts in 2 minutes. Total window: 4 minutes.`);
   } else {
-    console.log(`  Event Window: 15:30 IST — 15:34 IST`);
+    console.log(`  Event Window: 15:35 IST — 15:39 IST`);
   }
   console.log(`${"═".repeat(60)}\n`);
 });
